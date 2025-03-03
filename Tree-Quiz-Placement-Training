@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quiz App</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-6">
+    <div class="mx-auto bg-white p-6 shadow-md rounded-lg">
+        <div id="quiz" class="container-fluid mt-6"></div>
+        
+    </div>
+
+    <script>
+        const questions = [
+            { text: "Which of the following is a linear data structure?", options: ["Tree", "Graph", "Array", "None"], answer: "Array" },
+            { text: "In a linked list, the relationship between elements is represented using:", options: ["Sequential memory locations", "Pointers", "Indices", "None"], answer: "Pointers" },
+            { text: "Arrays are most suitable when:", options: ["Elements change frequently", "Elements are fixed", "Elements are non-sequential", "None"], answer: "Elements are fixed" },
+            { text: "Which of the following is a nonlinear data structure?", options: ["Array", "Linked List", "Tree", "Stack"], answer: "Tree" },
+            { text: "In a nonlinear data structure, data elements are organized:", options: ["Sequentially", "Hierarchically", "Randomly", "None"], answer: "Hierarchically" },
+            { text: "Which of the following is an example of a nonlinear data structure?", options: ["Stack", "Queue", "Graph", "Linked List"], answer: "Graph" },
+            { text: "A tree is a nonlinear data structure that models:", options: ["Sequential relationships", "Hierarchical relationships", "Random relationships", "None"], answer: "Hierarchical relationships" },
+            { text: "In a tree, a node with no children is called a:", options: ["Root", "Leaf", "Internal node", "Parent"], answer: "Leaf" },
+            { text: "The root of a tree has:", options: ["No parent", "No children", "No siblings", "None"], answer: "No parent" },
+            { text: "The height of a tree is defined as:", options: ["Number of nodes", "Longest path from root to leaf", "Number of edges", "None"], answer: "Longest path from root to leaf" },
+            { text: "In a tree, the depth of a node is:", options: ["Number of children", "Path from root to node", "Number of siblings", "None"], answer: "Path from root to node" },
+            { text: "Which of the following is NOT a tree application?", options: ["Organization charts", "File systems", "Sorting algorithms", "Programming environments"], answer: "Sorting algorithms" },
+            { text: "A binary tree is a tree in which each node can have at most:", options: ["One child", "Two children", "Three children", "Any number of children"], answer: "Two children" },
+            { text: "A full binary tree is one where:", options: ["All leaves at the same level", "Every internal node has two children", "Both a and b", "None"], answer: "Both a and b" },
+            { text: "A complete binary tree is one that is:", options: ["Full except for missing leaves on the right", "Full except for missing leaves on the left", "Full except for missing leaves anywhere", "None"], answer: "Full except for missing leaves on the right" },
+            { text: "In a binary tree, the left and right subtrees are:", options: ["Always identical", "Always disjoint", "Always overlapping", "None"], answer: "Always disjoint" },
+            { text: "Which traversal visits the root first, then the left subtree, and finally the right subtree?", options: ["Inorder", "Preorder", "Postorder", "Level order"], answer: "Preorder" },
+            { text: "In level-order traversal, nodes are visited:", options: ["Left to right, level by level", "Right to left, level by level", "Randomly", "None"], answer: "Left to right, level by level" },
+            { text: "Which traversal algorithm uses a queue?", options: ["Preorder", "Postorder", "Level order", "Inorder"], answer: "Level order" },
+            { text: "In a binary tree, the inorder traversal visits nodes in:", options: ["Root, left, right", "Left, root, right", "Left, right, root", "None"], answer: "Left, root, right" }
+        ];
+
+        function renderQuiz() {
+            const quizContainer = document.getElementById('quiz');
+            quizContainer.innerHTML = '';
+            questions.forEach((q, index) => {
+                quizContainer.innerHTML += `
+                    <div class="border p-4 mb-4 rounded-lg bg-gray-50">
+                        <h3 class="font-semibold">Q${index + 1}: ${q.text}</h3>
+                        ${q.options.map(option => `<p><input type='radio' name='q${index}'> ${option}</p>`).join('')}
+                        <button onclick="toggleAnswer(${index})" class="bg-green-500 text-white px-3 py-1 rounded mt-2">Show/Hide Answer</button>
+                        <p id="answer-${index}" class="hidden text-gray-600">Answer: ${q.answer}</p>
+                    </div>`;
+            });
+        }
+
+        function toggleAnswer(index) {
+            document.getElementById(`answer-${index}`).classList.toggle('hidden');
+        }
+
+        document.addEventListener("DOMContentLoaded", () => {
+            renderQuiz();
+        });
+    </script>
+</body>
+</html>
