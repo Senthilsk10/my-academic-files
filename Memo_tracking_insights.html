@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Memo Load Calculator</title>
+  <script src="https://cdn.jsdelivr.net/npm/angular@1.8.2/angular.min.js"></script>
+  <script>
+    angular.module('memoApp', []).controller('LoadController', function($scope) {
+      $scope.centers = 1;
+      $scope.blocksPerCenter = 1;
+      $scope.avgReadsPerBlock = 2800;
+      $scope.avgWritesPerBlock = 64;
+      $scope.avgDeletesPerBlock = 2;
+      $scope.docSizeBytes = 1503;
+
+      $scope.calculate = function() {
+        const totalBlocks = $scope.centers * $scope.blocksPerCenter;
+
+        $scope.totalReads = totalBlocks * $scope.avgReadsPerBlock;
+        $scope.totalWrites = totalBlocks * $scope.avgWritesPerBlock;
+        $scope.totalDeletes = totalBlocks * $scope.avgDeletesPerBlock;
+
+        $scope.dailyReadSizeMB = ($scope.totalReads * $scope.docSizeBytes) / (1024 * 1024);
+        $scope.dailyWriteSizeMB = ($scope.totalWrites * $scope.docSizeBytes) / (1024 * 1024);
+
+        $scope.weeklyReads = $scope.totalReads * 7;
+        $scope.weeklyWrites = $scope.totalWrites * 7;
+        $scope.weeklyDeletes = $scope.totalDeletes * 7;
+        $scope.weeklyReadSizeMB = $scope.dailyReadSizeMB * 7;
+        $scope.weeklyWriteSizeMB = $scope.dailyWriteSizeMB * 7;
+
+        $scope.monthlyReads = $scope.totalReads * 30;
+        $scope.monthlyWrites = $scope.totalWrites * 30;
+        $scope.monthlyDeletes = $scope.totalDeletes * 30;
+        $scope.monthlyReadSizeMB = $scope.dailyReadSizeMB * 30;
+        $scope.monthlyWriteSizeMB = $scope.dailyWriteSizeMB * 30;
+      };
+
+      $scope.calculate();
+    });
+  </script>
+   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+</head>
+<body ng-app="memoApp" ng-controller="LoadController" class="bg-gray-100 text-gray-900 p-8">
+  <div class="max-w-3xl mx-auto bg-white shadow-lg rounded-xl p-6">
+    <h1 class="text-2xl font-bold mb-4">📊 Memo Load Calculator</h1>
+    
+    <!-- How to Guide Section -->
+    <div class="bg-blue-50 p-4 rounded-md mb-6">
+      <h2 class="text-xl font-semibold mb-2 text-blue-600">📘 How to Use the Memo Load Calculator</h2>
+      <p class="text-sm">
+        1. Enter the number of <strong>Centers</strong> involved in your memo system.
+        <br>
+        2. Enter the number of <strong>Blocks per Center</strong> that are being managed.
+        <br>
+        3. The calculator will automatically update the <strong>total reads, writes, and deletes</strong> based on average values for each block.
+        <br>
+        4. You'll see a breakdown of the data load in terms of <strong>daily, weekly, and monthly</strong> totals.
+        <br>
+        5. Adjust the number of centers or blocks, and the system will instantly update the results.
+      </p>
+    </div>
+
+    <!-- How It Works Section -->
+    <div class="bg-green-50 p-4 rounded-md mb-6">
+      <h2 class="text-xl font-semibold mb-2 text-green-600">🔧 How It Works</h2>
+      <p class="text-sm">
+        The Memo Load Calculator calculates the total data load for your memo system based on the following factors:
+        <br>
+        1. Centers: The number of centers handling memo data.
+        <br>
+        2. Blocks per Center: The number of blocks in each center.
+        <br>
+        3. Average Reads, Writes, and Deletes per Block: These values are based on the memo system’s operations per block.
+        <br>
+        4. Document Size: Each memo document size is set at 1503 bytes. This is used to calculate the data size for reads and writes.
+        <br>
+        The system multiplies these values together to determine the total reads, writes, and deletes for daily, weekly, and monthly time frames.
+        <br>
+        Data Sizes are calculated by multiplying the number of reads/writes by the document size and converting the total bytes into megabytes (MB).
+      </p>
+    </div>
+
+    <!-- Input Fields for Centers and Blocks per Center -->
+    <div class="grid grid-cols-2 gap-4">
+      <label class="block">
+        <span class="text-sm font-semibold">Centers</span>
+        <input type="number" ng-model="centers" ng-change="calculate()" min="1" class="mt-1 p-2 w-full border rounded">
+      </label>
+      <label class="block">
+        <span class="text-sm font-semibold">Blocks per Center</span>
+        <input type="number" ng-model="blocksPerCenter" ng-change="calculate()" min="1" class="mt-1 p-2 w-full border rounded">
+      </label>
+    </div>
+
+    <!-- Daily Load Summary -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">🔍 Daily Load Summary</h2>
+      <ul class="space-y-1 text-sm">
+        <li>🧾 Total Reads: <strong>{{ totalReads }}</strong></li>
+        <li>✏️ Total Writes: <strong>{{ totalWrites }}</strong></li>
+        <li>🗑️ Total Deletes: <strong>{{ totalDeletes }}</strong></li>
+        <li>📦 Daily Read Data: <strong>{{ dailyReadSizeMB.toFixed(2) }} MB</strong></li>
+        <li>📥 Daily Write Data: <strong>{{ dailyWriteSizeMB.toFixed(2) }} MB</strong></li>
+      </ul>
+    </div>
+
+    <!-- Weekly Load Summary -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">📅 Weekly Load Summary</h2>
+      <ul class="space-y-1 text-sm">
+        <li>🧾 Total Reads: <strong>{{ weeklyReads }}</strong></li>
+        <li>✏️ Total Writes: <strong>{{ weeklyWrites }}</strong></li>
+        <li>🗑️ Total Deletes: <strong>{{ weeklyDeletes }}</strong></li>
+        <li>📦 Weekly Read Data: <strong>{{ weeklyReadSizeMB.toFixed(2) }} MB</strong></li>
+        <li>📥 Weekly Write Data: <strong>{{ weeklyWriteSizeMB.toFixed(2) }} MB</strong></li>
+      </ul>
+    </div>
+
+    <!-- Monthly Load Summary -->
+    <div class="mt-6">
+      <h2 class="text-xl font-semibold mb-2">📆 Monthly Load Summary</h2>
+      <ul class="space-y-1 text-sm">
+        <li>🧾 Total Reads: <strong>{{ monthlyReads }}</strong></li>
+        <li>✏️ Total Writes: <strong>{{ monthlyWrites }}</strong></li>
+        <li>🗑️ Total Deletes: <strong>{{ monthlyDeletes }}</strong></li>
+        <li>📦 Monthly Read Data: <strong>{{ monthlyReadSizeMB.toFixed(2) }} MB</strong></li>
+        <li>📥 Monthly Write Data: <strong>{{ monthlyWriteSizeMB.toFixed(2) }} MB</strong></li>
+      </ul>
+    </div>
+  </div>
+</body>
+</html>
