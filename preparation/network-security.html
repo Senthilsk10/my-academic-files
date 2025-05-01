@@ -1,11 +1,8 @@
-﻿<!DOCTYPE html>
-<html>
-
-<head>
+<html><head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>network-security</title>
-  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+  <link rel="stylesheet" href="https://stackedit.io/style.css">
 </head>
 
 <body class="stackedit">
@@ -138,9 +135,208 @@ PROCESS:
 OUTPUT: shared secret (s1 == s2)
 
 </code></pre>
+<h3 id="🔑-public-key-and-private-key-concepts">🔑 <strong>Public Key and Private Key Concepts</strong></h3>
+<h4 id="public-key-cryptography-asymmetric-encryption"><strong>Public Key Cryptography (Asymmetric Encryption)</strong></h4>
+<ul>
+<li>
+<p><strong>Public Key</strong>: A key that is shared openly with everyone. It is used to encrypt data or verify a signature. This key is <strong>publicly distributed</strong> and anyone can use it to encrypt messages or verify signatures.</p>
+</li>
+<li>
+<p><strong>Private Key</strong>: A key that is kept <strong>secret</strong> and known only to the owner. It is used to decrypt messages or create a signature. The private key is kept <strong>secure</strong> and should never be shared.</p>
+</li>
+<li>
+<p><strong>Why use both?</strong>: Public key encryption solves the problem of key distribution in symmetric cryptography. You can use the <strong>public key</strong> to encrypt data, and only the recipient with the <strong>private key</strong> can decrypt it. Similarly, to prove the sender’s identity, the <strong>private key</strong> can be used to sign data, and anyone can verify the signature using the <strong>public key</strong>.</p>
+</li>
+</ul>
+<hr>
+<h3 id="🔢-e-n-d-n-in-rsa-and-related-concepts">🔢 <strong>e, n, d, n in RSA and Related Concepts</strong></h3>
+<h4 id="in-rsa-encryption">In <strong>RSA Encryption</strong>:</h4>
+<ol>
+<li>
+<p><strong>n (Modulus)</strong>:</p>
+<ul>
+<li>
+<p>The product of two <strong>large prime numbers</strong> pp and qq.</p>
+</li>
+<li>
+<p>n=p×qn = p \times q</p>
+</li>
+<li>
+<p>nn is part of both the <strong>public</strong> and <strong>private</strong> keys. It defines the range of values (message values) that can be encrypted.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>e (Public Exponent)</strong>:</p>
+<ul>
+<li>
+<p>A small integer, typically chosen as 3 or 65537.</p>
+</li>
+<li>
+<p><strong>e</strong> is part of the <strong>public key</strong> and is used for <strong>encryption</strong>.</p>
+</li>
+<li>
+<p>ee should be coprime with ϕ(n)\phi(n), where ϕ(n)\phi(n) is the <strong>Euler’s Totient Function</strong> of nn and represents the number of integers that are coprime with nn.</p>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>d (Private Exponent)</strong>:</p>
+<ul>
+<li>
+<p>The <strong>private key exponent</strong> is used for <strong>decryption</strong>.</p>
+</li>
+<li>
+<p>It satisfies the equation e×d≡1mod  ϕ(n)e \times d \equiv 1 \mod \phi(n), where ϕ(n)\phi(n) is Euler’s Totient Function of nn.</p>
+</li>
+<li>
+<p>dd is calculated using the <strong>modular inverse</strong> of ee modulo ϕ(n)\phi(n).</p>
+</li>
+</ul>
+</li>
+</ol>
+<p><strong>Public Key</strong>: (e, n)<br>
+<strong>Private Key</strong>: (d, n)</p>
+<hr>
+<h3 id="🔢-prime-numbers-modular-arithmetic-and-gcd">🔢 <strong>Prime Numbers, Modular Arithmetic, and GCD</strong></h3>
+<h4 id="prime-numbers"><strong>Prime Numbers</strong>:</h4>
+<ul>
+<li>
+<p>A <strong>prime number</strong> is a natural number greater than 1 that has no positive divisors other than 1 and itself.</p>
+</li>
+<li>
+<p>Example: 2, 3, 5, 7, 11, 13, etc.</p>
+</li>
+</ul>
+<h4 id="greatest-common-divisor-gcd"><strong>Greatest Common Divisor (GCD)</strong>:</h4>
+<ul>
+<li>
+<p><strong>GCD</strong> of two numbers is the largest integer that divides both numbers without leaving a remainder.</p>
+</li>
+<li>
+<p>Example: gcd(12,15)=3\text{gcd}(12, 15) = 3 because 3 is the largest number that divides both 12 and 15.</p>
+</li>
+<li>
+<p><strong>Euclidean Algorithm</strong>: A method for calculating the GCD of two integers aa and bb:</p>
+<ol>
+<li>
+<p>Divide aa by bb, and get the remainder rr.</p>
+</li>
+<li>
+<p>Replace aa with bb and bb with rr, repeat until r=0r = 0.</p>
+</li>
+<li>
+<p>The last non-zero remainder is the GCD.</p>
+</li>
+</ol>
+</li>
+</ul>
+<h4 id="modular-arithmetic"><strong>Modular Arithmetic</strong>:</h4>
+<ul>
+<li>
+<p><strong>Modular Arithmetic</strong> is a system of arithmetic for integers, where numbers “wrap around” after reaching a certain value (the modulus).</p>
+</li>
+<li>
+<p>In RSA, we often compute values modulo nn, which is why we use expressions like amod  na \mod n.</p>
+</li>
+<li>
+<p>Example: 5mod  3=25 \mod 3 = 2, because when 5 is divided by 3, the remainder is 2.</p>
+</li>
+</ul>
+<h4 id="modular-inverse"><strong>Modular Inverse</strong>:</h4>
+<ul>
+<li>
+<p>The <strong>modular inverse</strong> of an integer aa modulo mm is the integer xx such that:</p>
+<p>a×x≡1mod  ma \times x \equiv 1 \mod m</p>
+</li>
+<li>
+<p>The modular inverse exists only if aa and mm are coprime (i.e., gcd(a,m)=1\text{gcd}(a, m) = 1).</p>
+</li>
+<li>
+<p><strong>Euclidean Algorithm</strong> can be used to find the modular inverse.</p>
+</li>
+</ul>
+<hr>
+<h3 id="🧩-encryption-and-decryption-in-algorithms">🧩 <strong>Encryption and Decryption in Algorithms</strong></h3>
+<h4 id="hill-cipher-matrix-based"><strong>Hill Cipher (Matrix-Based)</strong>:</h4>
+<ul>
+<li>
+<p>Uses a 2x2 matrix and works on <strong>pairs of letters</strong>.</p>
+</li>
+<li>
+<p>Encryption: The plaintext letter pair is multiplied by the key matrix and reduced modulo 26 to get the ciphertext.</p>
+</li>
+<li>
+<p>Decryption: The ciphertext is decrypted by multiplying it with the <strong>modular inverse of the key matrix</strong> (using the determinant and adjoint).</p>
+</li>
+</ul>
+<h4 id="rsa-public-key-encryption"><strong>RSA (Public-Key Encryption)</strong>:</h4>
+<ul>
+<li>
+<p><strong>Encryption</strong>: The sender uses the receiver’s <strong>public key</strong> (e, n) to encrypt a message.</p>
+<p>C=Memod  nC = M^e \mod n</p>
+</li>
+<li>
+<p><strong>Decryption</strong>: The receiver uses their <strong>private key</strong> (d, n) to decrypt the message.</p>
+<p>M=Cdmod  nM = C^d \mod n</p>
+</li>
+</ul>
+<h4 id="diffie-hellman-key-exchange"><strong>Diffie-Hellman Key Exchange</strong>:</h4>
+<ul>
+<li><strong>Key Exchange</strong>: Two parties (Alice and Bob) exchange public values, and each calculates the shared secret using their private key and the other party’s public value.</li>
+</ul>
+<hr>
+<h3 id="🛡️-algorithms-using-gcd-modular-inverse-etc.">🛡️ <strong>Algorithms Using GCD, Modular Inverse, etc.</strong></h3>
+<h4 id="dss-digital-signature-algorithm"><strong>DSS (Digital Signature Algorithm)</strong>:</h4>
+<ul>
+<li>
+<p>A <strong>digital signature</strong> is used to verify the authenticity of a message or document.</p>
+</li>
+<li>
+<p>It involves signing the message with a private key and verifying it with the public key.</p>
+</li>
+<li>
+<p>Similar to RSA but focuses on <strong>hash functions</strong> and signing/verification.</p>
+</li>
+</ul>
+<h4 id="diffie-hellman"><strong>Diffie-Hellman</strong>:</h4>
+<ul>
+<li>
+<p>Used for securely exchanging cryptographic keys over a public channel.</p>
+</li>
+<li>
+<p>Involves the use of <strong>modular exponentiation</strong> and relies on the <strong>difficulty of the discrete logarithm problem</strong>.</p>
+</li>
+</ul>
+<h4 id="elliptic-curve-cryptography-ecc"><strong>Elliptic Curve Cryptography (ECC)</strong>:</h4>
+<ul>
+<li>
+<p>Uses <strong>elliptic curves</strong> instead of prime numbers for encryption.</p>
+</li>
+<li>
+<p>Offers the same security as RSA with much smaller key sizes, making it more efficient.</p>
+</li>
+</ul>
+<hr>
+<h3 id="🔑-practical-applications">🔑 <strong>Practical Applications</strong></h3>
+<ol>
+<li>
+<p><strong>RSA</strong>: Secure communication in <strong>email encryption, web browsing (HTTPS)</strong>, and <strong>digital signatures</strong>.</p>
+</li>
+<li>
+<p><strong>Diffie-Hellman</strong>: Key exchange in <strong>VPNs</strong>, <strong>secure messaging apps</strong> like WhatsApp, and <strong>SSH</strong>.</p>
+</li>
+<li>
+<p><strong>Hill Cipher</strong>: Educational purposes, as it’s easy to implement with matrices and provides insights into <strong>linear algebra</strong>.</p>
+</li>
+<li>
+<p><strong>DSS</strong>: Used in <strong>blockchain</strong>, <strong>digital signatures</strong>, and <strong>authentication</strong>.</p>
+</li>
+</ol>
 <hr>
 <p>Code Available <a href="https://github.com/Senthilsk10/my-academic-files/tree/main/preparation">Here</a></p>
 </div>
-</body>
 
-</html>
+
+
+</body></html>
