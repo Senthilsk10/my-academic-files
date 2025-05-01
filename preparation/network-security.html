@@ -1,0 +1,146 @@
+﻿<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>network-security</title>
+  <link rel="stylesheet" href="https://stackedit.io/style.css" />
+</head>
+
+<body class="stackedit">
+  <div class="stackedit__html"><h2 id="📝-1️⃣-caesar-cipher">📝 <strong>1️⃣ Caesar Cipher</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg), shift (s)
+PROCESS:
+- Convert message to uppercase
+- For each character in message:
+    - Find its index in alphabet
+    - Shift index by s (mod 26)
+    - Append shifted character
+OUTPUT: ciphered message
+DECRYPT: repeat process with -s
+
+</code></pre>
+<hr>
+<h2 id="📝-2️⃣-rsa-key-generation--digital-signature">📝 <strong>2️⃣ RSA Key Generation &amp; Digital Signature</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: primes p, q
+PROCESS:
+- Compute n = p * q
+- Compute phi = (p-1)*(q-1)
+- Find smallest e where gcd(e, phi) == 1
+- Find d = modular inverse of e mod phi
+KEYS: public (e, n), private (d, n)
+
+SIGN:
+- Compute signature S = m^d mod n
+VERIFY:
+- Compute verified_message = S^e mod n
+OUTPUT: S, verified_message
+
+</code></pre>
+<hr>
+<h2 id="📝-3️⃣-playfair-cipher">📝 <strong>3️⃣ Playfair Cipher</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg), key string (key)
+PROCESS:
+- Format key matrix (5x5 grid excluding J)
+- Split message into pairs (add X if needed)
+- For each pair:
+    - Find positions in key matrix
+    - Apply rules:
+        - Same row → shift columns
+        - Same column → shift rows
+        - Else → swap columns
+OUTPUT: ciphered message
+DECRYPT: repeat with shift -1
+
+</code></pre>
+<hr>
+<h2 id="📝-4️⃣-hill-cipher-2x2-matrix">📝 <strong>4️⃣ Hill Cipher (2x2 Matrix)</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg), key matrix (2x2)
+PROCESS:
+- Split message into pairs (add X if needed)
+- For each pair:
+    - Convert letters to numbers
+    - Multiply by key matrix mod 26
+    - Convert back to letters
+OUTPUT: ciphered message
+
+DECRYPT:
+- Compute determinant of key mod 26
+- Find modular inverse of determinant
+- Find adjoint matrix
+- Compute inverse key matrix = adjoint * inverse(det) mod 26
+- Repeat encryption using inverse key
+OUTPUT: decrypted message
+
+</code></pre>
+<hr>
+<h2 id="📝-5️⃣-vigenère-cipher">📝 <strong>5️⃣ Vigenère Cipher</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg), key string (key)
+PROCESS:
+- For each letter:
+    - Add corresponding key letter (mod 26)
+OUTPUT: ciphered message
+
+DECRYPT:
+- For each letter:
+    - Subtract corresponding key letter (mod 26)
+OUTPUT: decrypted message
+
+</code></pre>
+<hr>
+<h2 id="📝-6️⃣-transposition-cipher-rail-fence-style">📝 <strong>6️⃣ Transposition Cipher (Rail Fence style)</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg)
+PROCESS:
+- Split message into 2 lists: even &amp; odd indices
+- Concatenate lists → encrypted message
+OUTPUT: ciphered message
+
+DECRYPT:
+- Split ciphered message into 2 halves
+- Interleave characters from both halves
+OUTPUT: decrypted message
+
+</code></pre>
+<hr>
+<h2 id="📝-7️⃣-rsa-like-cipher-on-letter-indices-this-updated-one">📝 <strong>7️⃣ RSA-like Cipher on letter indices (this updated one)</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: message (msg), primes p, q
+
+KEY GENERATION:
+- Compute n = p * q
+- Compute phi = (p - 1) * (q - 1)
+- Choose small e (e.g., e = 3)
+- Find d = modular inverse of e modulo phi
+- Public key = (e, n)
+- Private key = (d, n)
+
+ENCRYPTION (using private key):
+- For each letter in message:
+    - Convert letter to index (0-25)
+    - Compute cipher_value = (index ^ d) mod n
+OUTPUT: list of cipher values
+
+DECRYPTION (using public key):
+- For each cipher value:
+    - Compute index = (cipher_value ^ e) mod n
+    - Convert index back to letter
+OUTPUT: decrypted message
+
+</code></pre>
+<hr>
+<h2 id="📝-8️⃣-diffie-hellman-key-exchange">📝 <strong>8️⃣ Diffie-Hellman Key Exchange</strong></h2>
+<pre class=" language-plaintext"><code class="prism  language-plaintext">INPUT: prime p, base g
+PROCESS:
+- Alice picks private A, computes public a = g^A mod p
+- Bob picks private B, computes public b = g^B mod p
+- Alice computes shared key s1 = b^A mod p
+- Bob computes shared key s2 = a^B mod p
+OUTPUT: shared secret (s1 == s2)
+
+</code></pre>
+<hr>
+<p>Code Available <a href="https://github.com/Senthilsk10/my-academic-files/tree/main/preparation">Here</a></p>
+</div>
+</body>
+
+</html>
