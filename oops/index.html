@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Learning Cards</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            transition: all 0.3s ease;
+        }
+
+        /* Presentation Mode Styles */
+        .presentation-mode {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 1000;
+            display: none;
+            overflow: hidden;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Navigation Buttons */
+        .nav-btn {
+            position: fixed;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.2);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s ease;
+            z-index: 1001;
+            display: none;
+        }
+
+        .presentation-active .nav-btn {
+            display: flex;
+        }
+
+        .nav-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-50%) scale(1.1);
+        }
+
+        .nav-btn.prev {
+            left: 30px;
+        }
+
+        .nav-btn.next {
+            right: 30px;
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        /* Slide Counter */
+        .slide-counter {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            z-index: 1001;
+            display: none;
+        }
+
+        .presentation-active .slide-counter {
+            display: block;
+        }
+
+        /* Exit Button */
+        .exit-btn {
+            position: fixed;
+            top: 30px;
+            right: 30px;
+            background: rgba(255, 0, 0, 0.7);
+            color: white;
+            border: none;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 20px;
+            z-index: 1001;
+            transition: all 0.3s ease;
+            display: none;
+        }
+
+        .presentation-active .exit-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .exit-btn:hover {
+            background: rgba(255, 0, 0, 0.9);
+            transform: scale(1.1);
+        }
+
+        /* Presentation styling for cards */
+        .presentation-active .container {
+            filter: blur(5px);
+            pointer-events: none;
+        }
+
+        .presentation-active .add-card-btn {
+            display: none;
+        }
+
+        .card-presentation-view {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            width: 90%;
+            max-width: 1000px;
+            height: 80vh;
+            z-index: 1002;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.3s ease;
+        }
+
+        .card-presentation-view.active {
+            opacity: 1;
+            visibility: visible;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .presentation-meme-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            perspective: 1000px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .presentation-meme-inner {
+            width: 100%;
+            height: 100%;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+            position: relative;
+        }
+
+        .presentation-meme-card.flipped .presentation-meme-inner {
+            transform: rotateY(180deg);
+        }
+
+        .presentation-meme-front, .presentation-meme-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            border-radius: 20px;
+        }
+
+        .presentation-meme-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .presentation-meme-img {
+            width: 100%;
+            height: 100%;
+            object-fit: contain;
+            border-radius: 15px;
+            cursor: pointer;
+        }
+
+        .presentation-meme-front {
+            background: #f8f9fa;
+        }
+
+        .presentation-meme-img.portrait {
+            object-fit: contain;
+            max-height: 90%;
+            width: auto;
+        }
+
+        .presentation-meme-img.landscape {
+            object-fit: contain;
+            max-width: 90%;
+            height: auto;
+        }
+
+        .presentation-concept-text {
+            font-size: 2rem;
+            line-height: 1.6;
+            text-align: center;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Updated Presentation Code Card - Split Layout */
+        .presentation-code-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        .presentation-code-header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        .presentation-code-title {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+
+        .presentation-execute-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            border: none;
+            color: white;
+            padding: 15px 30px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 16px;
+            transition: all 0.3s ease;
+        }
+
+        .presentation-execute-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 6px 20px rgba(39, 174, 96, 0.4);
+        }
+
+        /* Split layout for code and output */
+        .presentation-code-content {
+            flex: 1;
+            display: flex;
+            min-height: 0; /* Important for flexbox scrolling */
+            pointer-events: auto;
+        }
+
+        .presentation-code-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-right: 10px;
+            pointer-events: auto;
+        }
+
+        .presentation-output-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 20px;
+            padding-left: 10px;
+            border-left: 2px solid #e2e8f0;
+            pointer-events: auto;
+        }
+
+        .presentation-code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 16px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            flex: 1;
+            overflow-y: auto;
+            scrollbar-width: thin;
+            scrollbar-color: #4a5568 #2d3748;
+            cursor: text;
+            user-select: text;
+            pointer-events: auto;
+        }
+
+        /* Custom scrollbar for webkit browsers */
+        .presentation-code-block::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .presentation-code-block::-webkit-scrollbar-track {
+            background: #2d3748;
+            border-radius: 4px;
+        }
+
+        .presentation-code-block::-webkit-scrollbar-thumb {
+            background: #4a5568;
+            border-radius: 4px;
+        }
+
+        .presentation-code-block::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        .presentation-output-section {
+            background: #f7fafc;
+            border: 3px dashed #cbd5e0;
+            border-radius: 15px;
+            padding: 20px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            flex: 1;
+            overflow-y: auto;
+            min-height: 0;
+            scrollbar-width: thin;
+            scrollbar-color: #9ca3af #f7fafc;
+            cursor: text;
+            user-select: text;
+            pointer-events: auto;
+        }
+
+        .presentation-output-section::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .presentation-output-section::-webkit-scrollbar-track {
+            background: #f7fafc;
+            border-radius: 4px;
+        }
+
+        .presentation-output-section::-webkit-scrollbar-thumb {
+            background: #9ca3af;
+            border-radius: 4px;
+        }
+
+        .presentation-output-section::-webkit-scrollbar-thumb:hover {
+            background: #6b7280;
+        }
+
+        .presentation-output-section.has-output {
+            background: #f0fff4;
+            border-color: #68d391;
+        }
+
+        .output-label {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a5568;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        /* Regular Mode Styles */
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            transition: all 0.3s ease;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .controls {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .controls h3 {
+            color: white;
+            margin-bottom: 15px;
+        }
+
+        .json-editor {
+            width: 100%;
+            height: 200px;
+            background: rgba(0,0,0,0.7);
+            color: #00ff00;
+            border: none;
+            border-radius: 10px;
+            padding: 15px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            resize: vertical;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: bold;
+            margin: 10px 5px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0,0,0,0.3);
+        }
+
+        .btn.secondary {
+            background: linear-gradient(45deg, #4ecdc4, #44a08d);
+        }
+
+        .btn.presentation {
+            background: linear-gradient(45deg, #9b59b6, #8e44ad);
+        }
+
+        .cards-container {
+            display: grid;
+            gap: 30px;
+        }
+
+        /* Regular Meme Card Styles */
+        .meme-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            perspective: 1000px;
+            cursor: pointer;
+        }
+
+        .meme-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .meme-card-inner {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            text-align: center;
+            transition: transform 0.8s;
+            transform-style: preserve-3d;
+        }
+
+        .meme-card.flipped .meme-card-inner {
+            transform: rotateY(180deg);
+        }
+
+        .meme-card-front, .meme-card-back {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .meme-card-back {
+            transform: rotateY(180deg);
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .meme-img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            border-radius: 10px;
+        }
+
+        .concept-text {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            text-align: center;
+        }
+
+        /* Regular Code Block Styles */
+        .code-card {
+            background: rgba(255,255,255,0.95);
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .code-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3);
+        }
+
+        .code-header {
+            background: linear-gradient(45deg, #2c3e50, #34495e);
+            color: white;
+            padding: 15px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .code-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        .execute-btn {
+            background: linear-gradient(45deg, #27ae60, #2ecc71);
+            border: none;
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .execute-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 4px 15px rgba(39, 174, 96, 0.4);
+        }
+
+        .code-content {
+            padding: 20px;
+        }
+
+        .code-block {
+            background: #2d3748;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            overflow-x: auto;
+            margin-bottom: 15px;
+            white-space: pre-wrap;
+        }
+
+        .output-section {
+            background: #f7fafc;
+            border: 2px dashed #cbd5e0;
+            border-radius: 10px;
+            padding: 20px;
+            min-height: 100px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .output-section.has-output {
+            background: #f0fff4;
+            border-color: #68d391;
+        }
+
+        .add-card-btn {
+            position: fixed;
+            bottom: 30px;
+            right: 30px;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: linear-gradient(45deg, #ff6b6b, #ee5a6f);
+            color: white;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 20px rgba(255, 107, 107, 0.4);
+            transition: all 0.3s ease;
+        }
+
+        .add-card-btn:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 25px rgba(255, 107, 107, 0.6);
+        }
+
+        /* Encoding Helper */
+        .encoding-helper {
+            background: rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+
+        .encoding-helper h4 {
+            color: white;
+            margin-bottom: 10px;
+        }
+
+        .encoding-input {
+            width: 100%;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            padding: 10px;
+            font-family: 'Courier New', monospace;
+            margin-bottom: 10px;
+            resize: vertical;
+        }
+
+        @media (max-width: 1024px) {
+            .presentation-code-content {
+                flex-direction: column;
+            }
+            
+            .presentation-code-section,
+            .presentation-output-container {
+                flex: none;
+                padding: 15px;
+            }
+            
+            .presentation-output-container {
+                border-left: none;
+                border-top: 2px solid #e2e8f0;
+                padding-left: 15px;
+                padding-top: 15px;
+            }
+            
+            .presentation-code-block,
+            .presentation-output-section {
+                height: 300px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .presentation-concept-text {
+                font-size: 1.5rem;
+            }
+            
+            .presentation-code-title {
+                font-size: 1.4rem;
+            }
+            
+            .presentation-code-block {
+                font-size: 14px;
+            }
+            
+            .nav-btn {
+                width: 50px;
+                height: 50px;
+                font-size: 20px;
+            }
+
+            .card-presentation-view {
+                width: 98%;
+                height: 90%;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Navigation Controls (initially hidden) -->
+    <button class="nav-btn prev" id="prevBtn" onclick="changeSlide(-1)">‹</button>
+    <button class="nav-btn next" id="nextBtn" onclick="changeSlide(1)">›</button>
+    <div class="slide-counter" id="slideCounter">1 / 1</div>
+    <button class="exit-btn" onclick="exitPresentation()">✕</button>
+
+    <!-- Card Presentation View -->
+    <div id="cardPresentationView" class="card-presentation-view">
+        <!-- Active card will be cloned here -->
+    </div>
+
+    <!-- Regular Mode -->
+    <div class="container">
+        <div class="header" style="display: none;">
+            <h1>🎓 Interactive Learning Cards</h1>
+            <p>Create engaging educational content with meme flashcards and executable code blocks</p>
+        </div>
+
+        <div class="encoding-helper" style="display:none">
+            <h4>🔧 Base64 Encoding Helper</h4>
+            <textarea id="encodeInput" class="encoding-input" placeholder="Enter your code/text here to encode..."></textarea>
+            <button class="btn secondary" onclick="encodeToBase64()">Encode to Base64</button>
+            <button class="btn secondary" onclick="decodeFromBase64()">Decode from Base64</button>
+        </div>
+
+        <div class="controls" style="display: none;">
+            <h3>📝 JSON Editor (Base64 Encoded)</h3>
+            <textarea id="jsonEditor" class="json-editor" placeholder="Enter your JSON configuration here...">
+                [
+                    {
+                        "type": "meme",
+                        "image":"/imgs/wide-usage.jpeg",
+                        "concept": "Welcome to Java OOP!"
+                    },
+                    {
+                        "type":"meme",
+                        "image":"https://i.redd.it/1lxxu5jon3se1.jpeg",
+                        "concept":"Object oriented Programming using JAVA"
+                    },
+                    {
+                        "type":"meme",
+                        "image":"/imgs/objects.jpg",
+                        "concept":"In any Object Oriented Programming languages, Everything is considered as objects. Think of classes like cookie cutters and objects like the actual cookies. You can't eat a cookie cutter, but you can definitely eat the cookies it makes! 🍪 Classes are blueprints, objects are the real deal!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/class-object.jpeg",
+                        "concept": "DEFINITION: A Class is a template/blueprint that defines the structure and behavior (attributes and methods) for objects. An Object is an instance of a class - it's the actual thing created from the blueprint with real values."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Your First Class - Cookie Factory",
+                        "code": "class Cookie {\n    String flavor;\n    int size;\n    \n    void bake() {\n        System.out.println(\"Baking \" + flavor + \" cookie!\");\n    }\n}\n\npublic class CookieFactory {\n    public static void main(String[] args) {\n        Cookie chocChip = new Cookie();\n        chocChip.flavor = \"Chocolate Chip\";\n        chocChip.bake();\n    }\n}",
+                        "output": "Baking Chocolate Chip cookie!"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Guess the Output",
+                        "code": "class Phone {\n    String brand = \"Unknown\";\n    int battery = 100;\n    \n    void call() {\n        battery -= 10;\n        System.out.println(brand + \" calling... Battery: \" + battery + \"%\");\n    }\n}\n\npublic class Test {\n    public static void main(String[] args) {\n        Phone myPhone = new Phone();\n        myPhone.brand = \"iPhone\";\n        myPhone.call();\n        myPhone.call();\n    }\n}",
+                        "output": "iPhone calling... Battery: 90%\niPhone calling... Battery: 80%"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/encap-2.jpg",
+                        "concept": "Encapsulation is like having a TV remote control. You don't need to know how the TV circuits work internally - you just press buttons! Private variables are the internal circuits, public methods are your buttons. Hide the complexity, show only what's needed!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/encap-1.webp",
+                        "concept": "DEFINITION: Encapsulation is the OOP principle of bundling data (variables) and methods that operate on that data into a single unit (class), while restricting direct access to internal components using access modifiers (private, protected, public)."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Encapsulation - Bank Account Security",
+                        "code": "class BankAccount {\n    private double balance = 1000;\n    private String pin = \"1234\";\n    \n    public boolean withdraw(String userPin, double amount) {\n        if (!userPin.equals(pin)) {\n            System.out.println(\"Wrong PIN! Access Denied 🚫\");\n            return false;\n        }\n        if (amount > balance) {\n            System.out.println(\"Insufficient funds!\");\n            return false;\n        }\n        balance -= amount;\n        System.out.println(\"Withdrawn: $\" + amount + \". Balance: $\" + balance);\n        return true;\n    }\n}",
+                        "output": "// Safe banking - outsiders can't directly access balance or pin!"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Access Control",
+                        "code": "class SocialMedia {\n    private String password = \"secret123\";\n    private int followers = 1000;\n    \n    public void login(String pass) {\n        if (pass.equals(password)) {\n            System.out.println(\"Welcome! You have \" + followers + \" followers\");\n        } else {\n            System.out.println(\"Login failed!\");\n        }\n    }\n    \n    public void addFollower() {\n        followers++;\n        System.out.println(\"New follower! Total: \" + followers);\n    }\n}\n\nSocialMedia account = new SocialMedia();\naccount.login(\"wrong\");\naccount.login(\"secret123\");\naccount.addFollower();",
+                        "output": "Login failed!\nWelcome! You have 1000 followers\nNew follower! Total: 1001"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/inheritance.jpg",
+                        "concept": "Inheritance is like family traits! 👨‍👩‍👧‍👦 Kids inherit features from parents - brown eyes, height, even dad jokes! In Java, child classes inherit methods and variables from parent classes. 'extends' is like saying 'I got this from my parent class!'"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/inheritance-types.png",
+                        "concept": "DEFINITION: Inheritance is the OOP principle where a new class (child/subclass) acquires properties and behaviors from an existing class (parent/superclass) using the 'extends' keyword. This promotes code reusability and establishes an 'is-a' relationship."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Inheritance - Vehicle Family",
+                        "code": "class Vehicle {\n    String brand;\n    int speed = 0;\n    \n    void start() {\n        System.out.println(brand + \" is starting...\");\n    }\n    \n    void accelerate() {\n        speed += 10;\n        System.out.println(\"Speed: \" + speed + \" km/h\");\n    }\n}\n\nclass Car extends Vehicle {\n    int doors = 4;\n    \n    void honk() {\n        System.out.println(\"Beep beep! 🚗\");\n    }\n}\n\nCar myCar = new Car();\nmyCar.brand = \"Toyota\";\nmyCar.start();  // Inherited!\nmyCar.honk();   // Own method",
+                        "output": "Toyota is starting...\nBeep beep! 🚗"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Super Family",
+                        "code": "class Animal {\n    String name;\n    \n    Animal(String name) {\n        this.name = name;\n        System.out.println(\"Animal \" + name + \" created\");\n    }\n    \n    void eat() {\n        System.out.println(name + \" is eating\");\n    }\n}\n\nclass Dog extends Animal {\n    Dog(String name) {\n        super(name);\n        System.out.println(\"Dog \" + name + \" is ready to play!\");\n    }\n    \n    void bark() {\n        System.out.println(name + \" says Woof!\");\n    }\n}\n\nDog buddy = new Dog(\"Buddy\");\nbuddy.eat();\nbuddy.bark();",
+                        "output": "Animal Buddy created\nDog Buddy is ready to play!\nBuddy is eating\nBuddy says Woof!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"imgs/polymorph.jpg",
+                        "concept": "Polymorphism is like a universal remote! 🎮 One remote (method name) can control different devices (objects) - TV, AC, Music System. Same button, different actions! In Java, same method name can behave differently based on the object calling it. One interface, many implementations!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/poly.png",
+                        "concept": "DEFINITION: Polymorphism is the OOP principle that allows objects of different classes to be treated as objects of a common base class, while each class provides its own specific implementation of methods. It enables 'one interface, multiple implementations' through method overriding (class methods) and overloading (functions)."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Polymorphism - Universal Sound System",
+                        "code": "class Instrument {\n    void makeSound() {\n        System.out.println(\"Some musical sound\");\n    }\n}\n\nclass Guitar extends Instrument {\n    void makeSound() {\n        System.out.println(\"Strum strum 🎸\");\n    }\n}\n\nclass Drums extends Instrument {\n    void makeSound() {\n        System.out.println(\"Boom boom 🥁\");\n    }\n}\n\n// Same method, different sounds!\nInstrument[] band = {new Guitar(), new Drums()};\nfor (Instrument i : band) {\n    i.makeSound();  // Polymorphism magic!\n}",
+                        "output": "Strum strum 🎸\nBoom boom 🥁"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Shape Shifter",
+                        "code": "class Shape {\n    void draw() {\n        System.out.println(\"Drawing a shape\");\n    }\n}\n\nclass Circle extends Shape {\n    void draw() {\n        System.out.println(\"Drawing a circle ⭕\");\n    }\n}\n\nclass Square extends Shape {\n    void draw() {\n        System.out.println(\"Drawing a square ⬜\");\n    }\n}\n\nShape mystery1 = new Circle();\nShape mystery2 = new Square();\nShape mystery3 = new Shape();\n\nmystery1.draw();\nmystery2.draw();\nmystery3.draw();",
+                        "output": "Drawing a circle ⭕\nDrawing a square ⬜\nDrawing a shape"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/abstract.jpg",
+                        "concept": "Abstraction is like ordering food online! 🍕 You click 'Order Pizza', but you don't know if the chef is Mario or Luigi, what oven they use, or how they knead the dough. You just get your pizza! Abstract classes define 'what' to do, child classes define 'how' to do it!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/encap.jpeg",
+                        "concept":"DEFINITION: Abstraction is the OOP principle of hiding implementation details while showing only essential features to the user. It's achieved through abstract classes (with 'abstract' keyword) that cannot be instantiated and may contain abstract methods that must be implemented by subclasses."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Abstraction - Payment Gateway",
+                        "code": "abstract class Payment {\n    abstract void processPayment(double amount);\n    \n    // Concrete method - common for all\n    void generateReceipt() {\n        System.out.println(\"Receipt generated 📧\");\n    }\n}\n\nclass CreditCard extends Payment {\n    void processPayment(double amount) {\n        System.out.println(\"Paid $\" + amount + \" via Credit Card 💳\");\n    }\n}\n\nclass PayPal extends Payment {\n    void processPayment(double amount) {\n        System.out.println(\"Paid $\" + amount + \" via PayPal 🏦\");\n    }\n}\n\nPayment p1 = new CreditCard();\np1.processPayment(50.0);\np1.generateReceipt();",
+                        "output": "Paid $50.0 via Credit Card 💳\nReceipt generated 📧"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Transport System",
+                        "code": "abstract class Transport {\n    String destination;\n    \n    Transport(String dest) {\n        this.destination = dest;\n        System.out.println(\"Going to: \" + destination);\n    }\n    \n    abstract void travel();\n    \n    void arrive() {\n        System.out.println(\"Arrived at \" + destination + \"! ✅\");\n    }\n}\n\nclass Flight extends Transport {\n    Flight(String dest) {\n        super(dest);\n    }\n    \n    void travel() {\n        System.out.println(\"Flying at 30,000 feet ✈️\");\n    }\n}\n\nTransport trip = new Flight(\"Tokyo\");\ntrip.travel();\ntrip.arrive();",
+                        "output": "Going to: Tokyo\nFlying at 30,000 feet ✈️\nArrived at Tokyo! ✅"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/interface-vs-abstract.webp",
+                        "concept": "Interfaces are like job contracts! 📋 A contract says 'You MUST do these tasks' but doesn't tell you HOW to do them. Java interfaces define what methods a class MUST implement, but each class can implement them differently. It's like saying 'All drivers must know how to brake' - but cars, bikes, and trucks brake differently!"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/java-8.jpg",
+                        "concept": "Before Java 8, interfaces were seen as the opposite of abstract classes because they allowed only public static final constants and abstract methods, but from Java 8 onward they evolved with default, static, and later private methods (Java 9+), making them much closer to abstract classes—though still limited to constants instead of instance fields."
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/boiler.webp",
+                        "concept": "DEFINITION: An Interface is a contract that defines a set of abstract methods (and constants) that implementing classes must provide concrete implementations for. It achieves 100% abstraction and supports multiple inheritance through the 'implements' keyword."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Interface - Social Media Contract",
+                        "code": "interface SocialPlatform {\n    void login();\n    void post(String content);\n    void logout();\n}\n\nclass Facebook implements SocialPlatform {\n    public void login() {\n        System.out.println(\"Facebook: Enter email & password 📧\");\n    }\n    \n    public void post(String content) {\n        System.out.println(\"Facebook Post: \" + content + \" 👍\");\n    }\n    \n    public void logout() {\n        System.out.println(\"Facebook: Logged out safely!\");\n    }\n}\n\nSocialPlatform platform = new Facebook();\nplatform.login();\nplatform.post(\"Hello World!\");\nplatform.logout();",
+                        "output": "Facebook: Enter email & password 📧\nFacebook Post: Hello World! 👍\nFacebook: Logged out safely!"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Smart Home Interface",
+                        "code": "interface SmartDevice {\n    void turnOn();\n    void turnOff();\n    default void status() {\n        System.out.println(\"Device status: Unknown\");\n    }\n}\n\nclass SmartLight implements SmartDevice {\n    boolean isOn = false;\n    \n    public void turnOn() {\n        isOn = true;\n        System.out.println(\"💡 Light is ON\");\n    }\n    \n    public void turnOff() {\n        isOn = false;\n        System.out.println(\"Light is OFF\");\n    }\n    \n    public void status() {\n        System.out.println(\"Light is \" + (isOn ? \"ON\" : \"OFF\"));\n    }\n}\n\nSmartDevice light = new SmartLight();\nlight.status();\nlight.turnOn();\nlight.status();\nlight.turnOff();",
+                        "output": "Light is OFF\n💡 Light is ON\nLight is ON\nLight is OFF"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/exception.webp",
+                        "concept": "Exception handling is like having insurance! 🛡️ You don't plan to crash your car, but if you do, insurance saves you from financial disaster. Java's try-catch saves your program from crashing when unexpected errors occur. Better to be prepared than sorry! "
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/big-brain.jpg",
+                        "concept":"DEFINITION: Exception Handling is a programming mechanism to handle runtime errors gracefully using try-catch-finally blocks. Exceptions are objects that represent error conditions, and handling them prevents program termination and provides alternative execution paths."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Exception Handling - Safe Division",
+                        "code": "import java.util.Scanner;\n\npublic class SafeCalculator {\n    public static void main(String[] args) {\n        Scanner sc = new Scanner(System.in);\n        \n        try {\n            System.out.println(\"Enter two numbers:\");\n            int a = sc.nextInt();\n            int b = sc.nextInt();\n            \n            int result = a / b;\n            System.out.println(\"Result: \" + result);\n            \n        } catch (ArithmeticException e) {\n            System.out.println(\"Error: Can't divide by zero! 🚫\");\n        } catch (Exception e) {\n            System.out.println(\"Something went wrong: \" + e.getMessage());\n        } finally {\n            System.out.println(\"Calculator session ended.\");\n            sc.close();\n        }\n    }\n}",
+                        "output": "// Input: 10, 0\nError: Can't divide by zero! 🚫\nCalculator session ended."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: File Manager",
+                        "code": "import java.io.*;\n\npublic class FileManager {\n    public static void readFile(String filename) {\n        try {\n            FileReader file = new FileReader(filename);\n            System.out.println(\"File opened successfully! 📁\");\n            file.close();\n        } catch (FileNotFoundException e) {\n            System.out.println(\"File not found: \" + filename + \" 🔍\");\n        } catch (IOException e) {\n            System.out.println(\"IO Error occurred! ⚠️\");\n        } finally {\n            System.out.println(\"File operation completed.\");\n        }\n    }\n    \n    public static void main(String[] args) {\n        readFile(\"existing.txt\");  // Assume this exists\n        readFile(\"missing.txt\");   // This doesn't exist\n    }\n}",
+                        "output": "File opened successfully! 📁\nFile operation completed.\nFile not found: missing.txt 🔍\nFile operation completed."
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/poly.png",
+                        "concept": "Method overloading is like having different sized spoons in your kitchen! 🥄 You have teaspoon for sugar, tablespoon for soup, and ladle for serving. Same purpose (scooping), different sizes. In Java, same method name can have different parameters - same purpose, different inputs! "
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/overload-vs-poly.png",
+                        "concept": "DEFINITION: Method Overloading is a compile-time polymorphism feature where multiple methods in the same class have the same name but different parameter lists (different number, type, or order of parameters). The compiler determines which method to call based on the arguments provided."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Method Overloading - Pizza Ordering",
+                        "code": "class PizzaShop {\n    // Basic pizza\n    void orderPizza() {\n        System.out.println(\"Ordered: Plain pizza 🍕\");\n    }\n    \n    // Pizza with size\n    void orderPizza(String size) {\n        System.out.println(\"Ordered: \" + size + \" plain pizza 🍕\");\n    }\n    \n    // Pizza with size and toppings\n    void orderPizza(String size, String topping) {\n        System.out.println(\"Ordered: \" + size + \" pizza with \" + topping + \" 🍕\");\n    }\n    \n    // Multiple toppings\n    void orderPizza(String size, String... toppings) {\n        System.out.print(\"Ordered: \" + size + \" pizza with \");\n        for (String topping : toppings) {\n            System.out.print(topping + \" \");\n        }\n        System.out.println(\"🍕\");\n    }\n\n    public static void main(String[] args) {\n        PizzaShop shop = new PizzaShop();\n        shop.orderPizza();\n        shop.orderPizza(\"Medium\");\n        shop.orderPizza(\"Large\", \"Cheese\");\n        shop.orderPizza(\"Small\", \"Olives\", \"Mushrooms\", \"Peppers\");\n    }\n}",
+                        "output": "Ordered: Plain pizza 🍕\nOrdered: Medium plain pizza 🍕\nOrdered: Large pizza with Cheese 🍕\nOrdered: Small pizza with Olives Mushrooms Peppers 🍕\n// One shop, many pizza options!"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Calculator Overloading",
+                        "code": "class Calculator {\n    int add(int a, int b) {\n        return a + b;\n    }\n    \n    double add(double a, double b) {\n        return a + b;\n    }\n    \n    int add(int a, int b, int c) {\n        return a + b + c;\n    }\n    \n    String add(String a, String b) {\n        return a + b;\n    }\n}\n\nCalculator calc = new Calculator();\nSystem.out.println(calc.add(5, 3));          // int + int\nSystem.out.println(calc.add(5.5, 2.3));      // double + double  \nSystem.out.println(calc.add(1, 2, 3));       // three ints\nSystem.out.println(calc.add(\"Hello\", \"World\")); // string + string",
+                        "output": "8\n7.8\n6\nHelloWorld"
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/statics.png",  
+                        "concept": "Static methods and variables are like public utilities! ⚡ Everyone in the city shares the same power plant - you don't need your own personal power plant at home! Static members belong to the class itself, not to any specific object. Math.max() works without creating a Math object! "
+                    },
+                    {
+                        "type": "meme",
+                        "image":"/imgs/backdoor.webp",
+                        "concept": "DEFINITION: Static members (variables and methods) belong to the class rather than any instance. They are loaded when the class is first loaded and can be accessed using the class name without creating objects. Static variables are shared among all instances, and static methods cannot access non-static members directly."
+                    },
+                    {
+                        "type": "code",
+                        "title": "Static Members - School System",
+                        "code": "class Student {\n    String name;\n    static String school = \"Java High School\";\n    static int totalStudents = 0;\n    \n    Student(String name) {\n        this.name = name;\n        totalStudents++;  // Shared counter!\n    }\n    \n    static void showSchoolInfo() {\n        System.out.println(\"School: \" + school);\n        System.out.println(\"Total Students: \" + totalStudents);\n    }\n    \n    void introduce() {\n        System.out.println(\"Hi! I'm \" + name + \" from \" + school);\n    }\n}\n\nStudent s1 = new Student(\"Alice\");\nStudent s2 = new Student(\"Bob\");\nStudent.showSchoolInfo();  // Called on class, not object!\ns1.introduce();\ns2.introduce();",
+                        "output": "School: Java High School\nTotal Students: 2\nHi! I'm Alice from Java High School\nHi! I'm Bob from Java High School"
+                    },
+                    {
+                        "type": "code",
+                        "title": "Challenge: Bank with Static Features",
+                        "code": "class BankAccount {\n    private String accountHolder;\n    private double balance;\n    private static String bankName = \"Java Bank\";\n    private static double interestRate = 5.5;\n    private static int totalAccounts = 0;\n    \n    public BankAccount(String holder, double initialBalance) {\n        this.accountHolder = holder;\n        this.balance = initialBalance;\n        totalAccounts++;\n    }\n    \n    public static void changeBankName(String newName) {\n        bankName = newName;\n    }\n    \n    public static void showBankStats() {\n        System.out.println(bankName + \" - Total Accounts: \" + totalAccounts);\n        System.out.println(\"Interest Rate: \" + interestRate + \"%\");\n    }\n    \n    public void showAccount() {\n        System.out.println(accountHolder + \" at \" + bankName + \": $\" + balance);\n    }\n}\n\nBankAccount acc1 = new BankAccount(\"John\", 1000);\nBankAccount acc2 = new BankAccount(\"Jane\", 2000);\nBankAccount.showBankStats();\nBankAccount.changeBankName(\"Super Java Bank\");\nacc1.showAccount();\nacc2.showAccount();",
+                        "output": "Java Bank - Total Accounts: 2\nInterest Rate: 5.5%\nJohn at Super Java Bank: $1000.0\nJane at Super Java Bank: $2000.0"
+                    }
+                    ]
+
+            </textarea>
+            <div>
+                <button class="btn" onclick="loadFromJSON()">🚀 Load Cards</button>
+                <button class="btn presentation" onclick="startPresentation()">🎬 Presentation Mode</button>
+                <button class="btn secondary" onclick="exportJSON()">💾 Export JSON</button>
+                <button class="btn secondary" onclick="clearAll()">🗑️ Clear All</button>
+            </div>
+        </div>
+
+        <div id="cardsContainer" class="cards-container">
+            <!-- Cards will be dynamically generated here -->
+        </div>
+    </div>
+
+    <button style="display: none;"" class="add-card-btn" onclick="addNewCard()">+</button>
+
+    <script>
+        let cardsData = [];
+        let currentSlide = 0;
+        let isPresentationMode = false;
+
+        // Base64 Encoding/Decoding Functions
+        function encodeToBase64() {
+            const input = document.getElementById('encodeInput');
+            const text = input.value;
+            if (text) {
+                const encoded = btoa(unescape(encodeURIComponent(text)));
+                input.value = encoded;
+            }
+        }
+
+        function decodeFromBase64() {
+            const input = document.getElementById('encodeInput');
+            const encodedText = input.value;
+            try {
+                const decoded = decodeURIComponent(escape(atob(encodedText)));
+                input.value = decoded;
+            } catch (error) {
+                alert('Invalid Base64 string');
+            }
+        }
+
+        function decodeBase64(str) {
+            try {
+                return decodeURIComponent(escape(atob(str)));
+            } catch (error) {
+                return str; // Return original if not base64
+            }
+        }
+
+        function encodeBase64(str) {
+            return btoa(unescape(encodeURIComponent(str)));
+        }
+
+        // Card Management Functions
+        function loadFromJSON() {
+            try {
+                const jsonText = document.getElementById('jsonEditor').value;
+                cardsData = JSON.parse(jsonText);
+                renderCards();
+            } catch (error) {
+                alert('Invalid JSON format. Please check your syntax.');
+                console.error('JSON Parse Error:', error);
+            }
+        }
+
+        function renderCards() {
+            const container = document.getElementById('cardsContainer');
+            container.innerHTML = '';
+
+            cardsData.forEach((card, index) => {
+                if (card.type === 'meme') {
+                    container.appendChild(createMemeCard(card, index));
+                } else if (card.type === 'code') {
+                    container.appendChild(createCodeCard(card, index));
+                }
+            });
+        }
+
+        function createMemeCard(card, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'meme-card';
+            cardDiv.dataset.index = index;
+            const decodedConcept = decodeBase64(card.concept);
+            cardDiv.innerHTML = `
+                <div class="meme-card-inner">
+                    <div class="meme-card-front">
+                        <img src="${card.image || '/imgs/fallback.jpeg'}" alt="Meme" class="meme-img" >
+                    </div>
+                    <div class="meme-card-back">
+                        <div class="concept-text">${escapeHtml(decodedConcept)}</div>
+                    </div>
+                </div>
+            `;
+
+            cardDiv.addEventListener('click', () => {
+                if (!isPresentationMode) {
+                    cardDiv.classList.toggle('flipped');
+                } else {
+                    showCardInPresentation(index);
+                }
+            });
+
+            return cardDiv;
+        }
+
+        function createCodeCard(card, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'code-card';
+            cardDiv.dataset.index = index;
+            const decodedCode = decodeBase64(card.code);
+            cardDiv.innerHTML = `
+                <div class="code-header">
+                    <span class="code-title">${card.title}</span>
+                    <button class="execute-btn" onclick="executeCode(${index})">▶ Execute</button>
+                </div>
+                <div class="code-content">
+                    <div class="code-block">${escapeHtml(decodedCode)}</div>
+                    <div class="output-section" id="output-${index}">
+                        <em>Click "Execute" to see the output...</em>
+                    </div>
+                </div>
+            `;
+
+            cardDiv.addEventListener('click', (e) => {
+                if (isPresentationMode && !e.target.classList.contains('execute-btn')) {
+                    showCardInPresentation(index);
+                }
+            });
+
+            return cardDiv;
+        }
+
+        function executeCode(index) {
+            const card = cardsData[index];
+            const outputDiv = document.getElementById(`output-${index}`);
+            const decodedOutput = decodeBase64(card.output);
+            
+            outputDiv.innerHTML = `<strong>Output:</strong><br>${escapeHtml(decodedOutput)}`;
+            outputDiv.classList.add('has-output');
+
+            outputDiv.style.opacity = '0';
+            setTimeout(() => {
+                outputDiv.style.transition = 'opacity 0.5s ease';
+                outputDiv.style.opacity = '1';
+            }, 100);
+        }
+
+        // Presentation Mode Functions
+        function startPresentation() {
+            if (cardsData.length === 0) {
+                alert('Please load some cards first!');
+                return;
+            }
+
+            isPresentationMode = true;
+            document.body.classList.add('presentation-active');
+            currentSlide = 0;
+            showCardInPresentation(currentSlide);
+            updateNavigationButtons();
+            document.addEventListener('keydown', handleKeyPress);
+        }
+
+        function showCardInPresentation(index) {
+            currentSlide = index;
+            const presentationView = document.getElementById('cardPresentationView');
+            presentationView.innerHTML = '';
+            
+            const card = cardsData[index];
+            
+            if (card.type === 'meme') {
+                const presentationCard = createPresentationMemeCard(card, index);
+                presentationView.appendChild(presentationCard);
+            } else if (card.type === 'code') {
+                const presentationCard = createPresentationCodeCard(card, index);
+                presentationView.appendChild(presentationCard);
+            }
+            
+            presentationView.classList.add('active');
+            document.getElementById('slideCounter').textContent = `${index + 1} / ${cardsData.length}`;
+            updateNavigationButtons();
+        }
+
+        function createPresentationMemeCard(card, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'presentation-meme-card';
+            const decodedConcept = decodeBase64(card.concept);
+            cardDiv.innerHTML = `
+                <div class="presentation-meme-inner">
+                    <div class="presentation-meme-front">
+                        <img src="${card.image || '/imgs/fallback.jpeg'}" alt="Meme" class="presentation-meme-img">
+                    </div>
+                    <div class="presentation-meme-back">
+                        <div class="presentation-concept-text">${escapeHtml(decodedConcept)}</div>
+                    </div>
+                </div>
+            `;
+
+            cardDiv.addEventListener('click', () => {
+                cardDiv.classList.toggle('flipped');
+            });
+
+            return cardDiv;
+        }
+
+        function createPresentationCodeCard(card, index) {
+            const cardDiv = document.createElement('div');
+            cardDiv.className = 'presentation-code-card';
+            const decodedCode = decodeBase64(card.code);
+            cardDiv.innerHTML = `
+                <div class="presentation-code-header">
+                    <span class="presentation-code-title">${card.title}</span>
+                    <button class="presentation-execute-btn" onclick="executePresentationCode(${index})">▶ Execute</button>
+                </div>
+                <div class="presentation-code-content">
+                    <div class="presentation-code-section">
+                        <div class="presentation-code-block">${escapeHtml(decodedCode)}</div>
+                    </div>
+                    <div class="presentation-output-container">
+                        <div class="output-label">Output</div>
+                        <div class="presentation-output-section" id="presentation-output-${index}">
+                            <em>Click "Execute" to see the output...</em>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            return cardDiv;
+        }
+
+        function executePresentationCode(index) {
+            const card = cardsData[index];
+            const outputDiv = document.getElementById(`presentation-output-${index}`);
+            const decodedOutput = decodeBase64(card.output);
+            
+            outputDiv.innerHTML = `<strong>Result:</strong><br><br>${escapeHtml(decodedOutput)}`;
+            outputDiv.classList.add('has-output');
+
+            outputDiv.style.opacity = '0';
+            setTimeout(() => {
+                outputDiv.style.transition = 'opacity 0.5s ease';
+                outputDiv.style.opacity = '1';
+            }, 100);
+        }
+
+        function changeSlide(direction) {
+            const newSlide = currentSlide + direction;
+            if (newSlide >= 0 && newSlide < cardsData.length) {
+                currentSlide = newSlide;
+                showCardInPresentation(currentSlide);
+            }
+        }
+
+        function updateNavigationButtons() {
+            const prevBtn = document.getElementById('prevBtn');
+            const nextBtn = document.getElementById('nextBtn');
+            
+            prevBtn.disabled = currentSlide === 0;
+            nextBtn.disabled = currentSlide === cardsData.length - 1;
+        }
+
+        function exitPresentation() {
+            isPresentationMode = false;
+            document.body.classList.remove('presentation-active');
+            document.getElementById('cardPresentationView').classList.remove('active');
+            document.removeEventListener('keydown', handleKeyPress);
+        }
+
+        function handleKeyPress(event) {
+            if (!isPresentationMode) return;
+            
+            switch(event.key) {
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                    changeSlide(-1);
+                    break;
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
+                    changeSlide(1);
+                    break;
+                case 'Escape':
+                    exitPresentation();
+                    break;
+            }
+        }
+
+        // Utility Functions
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        function exportJSON() {
+            const jsonString = JSON.stringify(cardsData, null, 2);
+            const blob = new Blob([jsonString], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'learning-cards-base64.json';
+            a.click();
+            URL.revokeObjectURL(url);
+        }
+
+        function clearAll() {
+            if (confirm('Are you sure you want to clear all cards?')) {
+                cardsData = [];
+                document.getElementById('cardsContainer').innerHTML = '';
+                document.getElementById('jsonEditor').value = '';
+            }
+        }
+
+        function addNewCard() {
+            const cardType = prompt('Enter card type (meme or code):');
+            if (cardType === 'meme') {
+                const imageUrl = prompt('Enter image URL:') || 'https://via.placeholder.com/400x300/ff6b6b/ffffff?text=New+Meme';
+                const concept = prompt('Enter concept explanation:') || 'Add your concept explanation here...';
+                const newCard = {
+                    type: 'meme',
+                    image: imageUrl,
+                    concept: encodeBase64(concept)
+                };
+                cardsData.push(newCard);
+            } else if (cardType === 'code') {
+                const title = prompt('Enter code title:') || 'New Code Example';
+                const code = prompt('Enter your code:') || '// Add your code here\nconsole.log("Hello, World!");';
+                const output = prompt('Enter expected output:') || 'Hello, World!';
+                const newCard = {
+                    type: 'code',
+                    title: title,
+                    code: encodeBase64(code),
+                    output: encodeBase64(output)
+                };
+                cardsData.push(newCard);
+            } else {
+                alert('Invalid card type. Please enter "meme" or "code".');
+                return;
+            }
+            
+            updateJSONEditor();
+            renderCards();
+        }
+
+        function updateJSONEditor() {
+            document.getElementById('jsonEditor').value = JSON.stringify(cardsData, null, 2);
+        }
+
+        // Initialize with sample data
+        window.addEventListener('load', () => {
+            loadFromJSON();
+            startPresentation();
+        });
+    </script>
+</body>
+</html>
